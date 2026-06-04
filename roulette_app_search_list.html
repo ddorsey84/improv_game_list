@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-roulette2026'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Roulette 2026">
+    <title>Roulette 2026</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+        }
+        body {
+            overflow: hidden;
+        }
+        #root {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        .subtitle {
+            color: #f87171;
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+        }
+        .search-box {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #1f2937;
+            color: white;
+            border: 2px solid #7f1d1d;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: #1f2937;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .filter-btn.active {
+            background: #DC2626;
+        }
+        .card {
+            background: linear-gradient(to bottom right, #111827, #1f2937);
+            border: 2px solid #DC2626;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            min-height: 24rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .card-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #f87171;
+            margin-bottom: 1.5rem;
+        }
+        .card-content {
+            margin-bottom: 1.5rem;
+        }
+        .card-meta {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .months-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .month-tag {
+            background: rgba(159, 18, 18, 0.5);
+            color: #fecaca;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+        }
+        .card-objective {
+            border-top: 1px solid #374151;
+            padding-top: 1.5rem;
+            color: #d1d5db;
+            font-size: 1.125rem;
+            line-height: 1.625;
+        }
+        .card-number {
+            text-align: right;
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 2rem;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .nav-btn {
+            padding: 0.75rem;
+            background: #DC2626;
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            min-width: 3rem;
+            min-height: 3rem;
+            font-size: 1.2rem;
+        }
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .nav-counter {
+            color: #d1d5db;
+            font-weight: 300;
+        }
+        .empty {
+            background: #1f2937;
+            border: 1px solid #4b5563;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            color: #d1d5db;
+        }
+        .notice {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            margin-top: -1rem;
+            margin-bottom: 1rem;
+        }
+
+        .results-summary {
+            color: #d1d5db;
+            font-size: 0.95rem;
+            margin: -0.75rem 0 0.75rem;
+        }
+        .results-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .result-item {
+            width: 100%;
+            text-align: left;
+            padding: 0.9rem;
+            background: #1f2937;
+            color: white;
+            border: 1px solid #4b5563;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .result-item:hover,
+        .result-item:focus {
+            outline: 2px solid #f87171;
+            outline-offset: 2px;
+        }
+        .result-item.active {
+            border-color: #DC2626;
+            background: #2b1f2a;
+        }
+        .result-name {
+            display: block;
+            font-weight: 700;
+            color: #f87171;
+            margin-bottom: 0.35rem;
+        }
+        .result-meta {
+            display: block;
+            color: #d1d5db;
+            font-size: 0.85rem;
+            margin-bottom: 0.35rem;
+        }
+        .result-objective {
+            display: block;
+            color: #9ca3af;
+            font-size: 0.85rem;
+            line-height: 1.35;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="container">
+            <h1>ROULETTE 2026</h1>
+            <p class="subtitle">Improv Game Reference</p>
+            <p class="notice">Read-only shared version.</p>
+
+            <input id="searchBox" type="text" placeholder="Search games..." class="search-box" autocomplete="off">
+
+            <div id="filters" class="filters"></div>
+
+            <div id="resultsSummary" class="results-summary"></div>
+            <div id="resultsList" class="results-list" aria-label="Matching games"></div>
+
+            <div id="cardArea"></div>
+
+            <div class="nav-buttons">
+                <button id="prevBtn" class="nav-btn" type="button" aria-label="Previous card">◀</button>
+                <span id="counter" class="nav-counter"></span>
+                <button id="nextBtn" class="nav-btn" type="button" aria-label="Next card">▶</button>
+            </div>
+        </div>
+    </div>
+
+    <script nonce="roulette2026">
+        "use strict";
+
+        const defaultGames = [{ id: 1, name: "6 Person, 2 Headed, 3 Person Game", players: 6, months: ["February"], objective: "Six players pair off into teams of three, speak one word at a time as three separate characters" },
+            { id: 2, name: "Actor's Nightmare", players: 2, months: ["November", "January"], objective: "One player gets a script while the other improvises, filling in gaps" },
+            { id: 3, name: "Afterlife Group Therapy", players: 5, months: ["October"], objective: "Group therapy for 4 newly dead, 1 therapist. All died differently" },
+            { id: 4, name: "Ancient Prophecy", players: "Varies", months: ["February"], objective: "Draw pictograms, audience retells, players guess in 20 seconds" },
+            { id: 5, name: "Back to Back Dubbing", players: 4, months: ["August", "March"], objective: "2 act silently, 2 narrate without seeing" },
+            { id: 6, name: "Back to Back Switch", players: 4, months: ["May"], objective: "Switch physical or voice actors on bell ring" },
+            { id: 7, name: "Ballet", players: 4, months: ["November", "May"], objective: "Use dancing to help guess Job, Location, Object" },
+            { id: 8, name: "Blues Jam", players: 4, months: ["November", "May"], objective: "Sing blues verses about annoyances with other players" },
+            { id: 9, name: "Boris", players: 2, months: ["March"], objective: "Good cop calls invisible bad cop to torture criminal" },
+            { id: 10, name: "Campfire Stories", players: "All", months: ["October"], objective: "Players take turns telling spooky story" },
+            { id: 11, name: "Change", players: 2, months: ["September"], objective: "Host dings to prompt action changes" },
+            { id: 12, name: "CSI Punsylvania", players: "All", months: ["March"], objective: "Backline game of puns about a murder" },
+            { id: 13, name: "Death Trigger", players: 4, months: ["February"], objective: "Say kill word to kill a player, death word kills you" },
+            { id: 14, name: "Evil Twin", players: 2, months: ["September"], objective: "Evil twins tap to make counterparts do evil" },
+            { id: 15, name: "Fork in the Road", players: 6, months: ["October", "February"], objective: "3 pairs start from same point, audience votes favorite" },
+            { id: 16, name: "Four Square", players: 4, months: ["November", "January"], objective: "Mini scenes rotating with prompts" },
+            { id: 17, name: "Goon River", players: 3, months: ["All"], objective: "3 monologues with different perspectives of one event" },
+            { id: 18, name: "Hey Baby", players: "All", months: ["January", "February"], objective: "Backline game of sexy jokes" },
+            { id: 19, name: "Hey Santa...", players: "All", months: ["November"], objective: "Christmas wish backline game" },
+            { id: 20, name: "Hijacker", players: 4, months: ["March"], objective: "Get weapon, transportation, location. Snapper & clapper" },
+            { id: 21, name: "Hydra PhD", players: "All", months: ["February"], objective: "Multi-head answers questions one word at a time" },
+            { id: 22, name: "Jeopardy", players: "3+", months: ["March"], objective: "Answer-first Jeopardy with final round" },
+            { id: 23, name: "LCD", players: 4, months: ["All"], objective: "Location/Career/Death pantomime telephone" },
+            { id: 24, name: "Little Voice", players: 2, months: ["November", "May"], objective: "Object persuades player to achieve goal" },
+            { id: 25, name: "LOTUS", players: 6, months: ["September"], objective: "3 pairs continue story at future points, 9 scenes total" },
+            { id: 26, name: "Movie Critic", players: 4, months: ["November"], objective: "Explain holiday film, two act it out" },
+            { id: 27, name: "Party Quirks", players: 4, months: ["All"], objective: "Host guesses quirks of party attendees" },
+            { id: 28, name: "Rashomon", players: 3, months: ["September"], objective: "Scene replayed from each character's POV" },
+            { id: 29, name: "Realtor", players: 3, months: ["August"], objective: "Realtor tours home, couple uses space" },
+            { id: 30, name: "Ride Share", players: "All", months: ["August", "October", "January"], objective: "Driver has scenes with each passenger" },
+            { id: 31, name: "Rumors", players: "All", months: ["March"], objective: "Rumor passes down and changes" },
+            { id: 32, name: "Scenes from a Hat", players: "All", months: ["August", "November", "January", "February"], objective: "Act out scenes based on prompt" },
+            { id: 33, name: "Seed Word", players: 6, months: ["January"], objective: "Audience votes least favorite team each round" },
+            { id: 34, name: "Serenade", players: "All", months: ["May"], objective: "ADULT (18+) gets serenaded with R&B pick-up lines" },
+            { id: 35, name: "Slideshow", players: "All", months: ["January"], objective: "One monologue, others pose as slideshow images" },
+            { id: 36, name: "Soap Opera", players: 4, months: ["August"], objective: "Scene with twist, death, conclusion" },
+            { id: 37, name: "Sounds Like a Song", players: 4, months: ["May"], objective: "Host stops scene to make players sing" },
+            { id: 38, name: "Survivor", players: 4, months: ["August", "November"], objective: "One sits out, remaining fill all parts" },
+            { id: 39, name: "Top That", players: 2, months: ["August", "February"], objective: "Pantomime action, other matches with new activity" },
+            { id: 40, name: "Understudy", players: "4+", months: ["January"], objective: "Host substitutes or switches actors mid-scene" },
+            { id: 41, name: "Voices from Heaven", players: 4, months: ["October"], objective: "Tell story of day you died" },
+            { id: 42, name: "What's the Matter with Stephen?", players: 3, months: ["August", "November", "February", "March"], objective: "Guess problem, he speaks gibberish" },
+            { id: 43, name: "Where Are These Chairs", players: "All", months: ["January"], objective: "Pairs rotate, ask location, do scene" },
+            { id: 44, name: "Wikipedia", players: "All", months: ["January"], objective: "Give facts, others edit or hyperlink" },
+            { id: 45, name: "Work Excuse", players: 3, months: ["March"], objective: "Guess why late, coworker pantomimes" },
+            { id: 46, name: "Yo Mama", players: "All", months: ["January", "February"], objective: "Line-up delivers Yo Mama jokes" },
+            { id: 47, name: "You Dirty Rat", players: "All", months: ["January"], objective: "Hitman-style nickname explanation" },];
+
+        let currentIndex = 0;
+        let searchTerm = "";
+        let filterPlayers = "";
+
+        const searchBox = document.getElementById("searchBox");
+        const filters = document.getElementById("filters");
+        const resultsSummary = document.getElementById("resultsSummary");
+        const resultsList = document.getElementById("resultsList");
+        const cardArea = document.getElementById("cardArea");
+        const counter = document.getElementById("counter");
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+
+        function createElement(tag, className, text) {
+            const el = document.createElement(tag);
+            if (className) el.className = className;
+            if (text !== undefined) el.textContent = String(text);
+            return el;
+        }
+
+        function getFilteredGames() {
+            const term = searchTerm.trim().toLowerCase();
+            return defaultGames.filter(game => {
+                const name = String(game.name || "").toLowerCase();
+                const objective = String(game.objective || "").toLowerCase();
+                const players = String(game.players || "");
+                const months = (game.months || []).join(" ").toLowerCase();
+                const matchesSearch = !term || name.includes(term) || objective.includes(term) || players.toLowerCase().includes(term) || months.includes(term);
+                const matchesPlayers = !filterPlayers || players === filterPlayers;
+                return matchesSearch && matchesPlayers;
+            });
+        }
+
+        function renderFilters() {
+            const options = ["", "2", "3", "4", "5", "6", "4+", "All", "Varies"];
+            filters.replaceChildren();
+
+            options.forEach(option => {
+                const button = createElement("button", "filter-btn" + (filterPlayers === option ? " active" : ""), option || "All");
+                button.type = "button";
+                button.addEventListener("click", () => {
+                    filterPlayers = option;
+                    currentIndex = 0;
+                    render();
+                });
+                filters.appendChild(button);
+            });
+        }
+
+
+        function renderResultsList(filteredGames) {
+            const term = searchTerm.trim();
+            resultsList.replaceChildren();
+
+            if (!filteredGames.length) {
+                resultsSummary.textContent = "No matching games found.";
+                return;
+            }
+
+            resultsSummary.textContent = term || filterPlayers
+                ? `${filteredGames.length} matching game${filteredGames.length === 1 ? "" : "s"}. Tap a result to open it.`
+                : `All ${filteredGames.length} games. Tap a result to open it.`;
+
+            filteredGames.forEach((game, index) => {
+                const button = createElement("button", "result-item" + (index === currentIndex ? " active" : ""));
+                button.type = "button";
+                button.setAttribute("aria-label", `Open ${game.name}`);
+
+                button.appendChild(createElement("span", "result-name", game.name));
+                button.appendChild(createElement("span", "result-meta", `${game.players} players • ${(game.months || []).join(", ")}`));
+                button.appendChild(createElement("span", "result-objective", game.objective));
+
+                button.addEventListener("click", () => {
+                    currentIndex = index;
+                    render();
+                    cardArea.scrollIntoView({ behavior: "smooth", block: "start" });
+                });
+
+                resultsList.appendChild(button);
+            });
+        }
+
+        function renderCard(game, total) {
+            const card = createElement("div", "card");
+
+            const contentWrap = document.createElement("div");
+            contentWrap.appendChild(createElement("h2", "card-title", game.name));
+
+            const cardContent = createElement("div", "card-content");
+
+            const playersMeta = createElement("div", "card-meta");
+            playersMeta.appendChild(createElement("span", "", "👥 Players:"));
+            playersMeta.appendChild(createElement("span", "", game.players));
+            cardContent.appendChild(playersMeta);
+
+            const monthsMeta = createElement("div", "card-meta");
+            monthsMeta.appendChild(createElement("span", "", "📅"));
+            const monthList = createElement("div", "months-list");
+            (game.months || []).forEach(month => {
+                monthList.appendChild(createElement("span", "month-tag", month));
+            });
+            monthsMeta.appendChild(monthList);
+            cardContent.appendChild(monthsMeta);
+
+            contentWrap.appendChild(cardContent);
+            contentWrap.appendChild(createElement("div", "card-objective", game.objective));
+            card.appendChild(contentWrap);
+
+            card.appendChild(createElement("div", "card-number", `Card ${currentIndex + 1} of ${total}`));
+            return card;
+        }
+
+        function render() {
+            const filteredGames = getFilteredGames();
+
+            if (currentIndex >= filteredGames.length) currentIndex = 0;
+
+            cardArea.replaceChildren();
+
+            renderResultsList(filteredGames);
+
+            if (!filteredGames.length) {
+                cardArea.appendChild(createElement("div", "empty", "No games match your search/filter."));
+                counter.textContent = "0 / 0";
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+                renderFilters();
+                return;
+            }
+
+            cardArea.appendChild(renderCard(filteredGames[currentIndex], filteredGames.length));
+            counter.textContent = `${currentIndex + 1} / ${filteredGames.length}`;
+            prevBtn.disabled = filteredGames.length === 1;
+            nextBtn.disabled = filteredGames.length === 1;
+            renderFilters();
+        }
+
+        searchBox.addEventListener("input", event => {
+            searchTerm = event.target.value;
+            currentIndex = 0;
+            render();
+        });
+
+        prevBtn.addEventListener("click", () => {
+            const filteredGames = getFilteredGames();
+            if (filteredGames.length > 0) {
+                currentIndex = (currentIndex - 1 + filteredGames.length) % filteredGames.length;
+                render();
+            }
+        });
+
+        nextBtn.addEventListener("click", () => {
+            const filteredGames = getFilteredGames();
+            if (filteredGames.length > 0) {
+                currentIndex = (currentIndex + 1) % filteredGames.length;
+                render();
+            }
+        });
+
+        render();
+    </script>
+</body>
+</html>
