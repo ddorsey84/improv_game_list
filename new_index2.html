@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Roulette 2026">
+    <title>Roulette 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; }
+        body { overflow: hidden; }
+        #root { width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; font-weight: bold; }
+        .subtitle { color: #f87171; font-size: 1.125rem; margin-bottom: 1rem; }
+        .search-box { width: 100%; padding: 0.75rem 1rem; background: #1f2937; color: white; border: 2px solid #7f1d1d; border-radius: 0.5rem; font-size: 1rem; margin-bottom: 1rem; }
+        .tabs, .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+        .tab-btn, .filter-btn { padding: 0.65rem 1rem; border: none; border-radius: 0.5rem; background: #1f2937; color: white; cursor: pointer; font-weight: 700; font-size: 0.95rem; }
+        .tab-btn.active, .filter-btn.active { background: #DC2626; }
+        .results-count { color: #d1d5db; margin-bottom: 1rem; font-size: 0.95rem; }
+        .card { background: linear-gradient(to bottom right, #111827, #1f2937); border: 2px solid #DC2626; border-radius: 0.5rem; padding: 2rem; margin-bottom: 2rem; min-height: 24rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-title { font-size: 2rem; font-weight: bold; color: #f87171; margin-bottom: 1.5rem; }
+        .card-content { margin-bottom: 1.5rem; }
+        .card-meta { margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .months-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+        .month-tag { background: rgba(159, 18, 18, 0.5); color: #fecaca; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; }
+        .card-objective { border-top: 1px solid #374151; padding-top: 1.5rem; color: #d1d5db; font-size: 1.125rem; line-height: 1.625; }
+        .card-number { text-align: right; color: #6b7280; font-size: 0.875rem; margin-top: 2rem; }
+        .nav-buttons { display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+        .nav-btn { padding: 0.75rem; background: #DC2626; color: white; border: none; border-radius: 9999px; cursor: pointer; }
+        .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .nav-counter { color: #d1d5db; font-weight: 300; }
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+        .game-card { background: #1f2937; border: 2px solid #4b5563; border-radius: 0.5rem; padding: 1rem; text-align: left; color: white; cursor: pointer; }
+        .game-card-title { font-size: 1.125rem; font-weight: bold; color: #f87171; margin-bottom: 0.5rem; }
+        .game-card-meta { font-size: 0.875rem; color: #9ca3af; margin-bottom: 0.75rem; }
+        .game-card-obj { font-size: 0.875rem; color: #d1d5db; line-height: 1.45; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+        const defaultGames = [
+            {
+                        "id": 1,
+                        "name": "6 Person, 2 Headed, 3 Person Game",
+                        "players": 6,
+                        "months": [
+                                    "February"
+                        ],
+                        "objective": "Given an activity or location, six players pair off into teams of three. Each team speaks one word at a time as three separate characters while playing a regular scene."
+            },
+            {
+                        "id": 2,
+                        "name": "Actor’s Nightmare",
+                        "players": 2,
+                        "months": [
+                                    "November",
+                                    "January"
+                        ],
+                        "objective": "Given an activity or location, two players tell a story. One player is provided a script while the other improvises and fills in the gaps as the story unfolds."
+            },
+            {
+                        "id": 3,
+                        "name": "Afterlife Group Therapy",
+                        "players": 5,
+                        "months": [
+                                    "October"
+                        ],
+                        "objective": "Four players have recently arrived in the afterlife. One player is the therapist helping them adjust. All players died from something inspired by one word, but not in the same way. They interact like a group therapy session, sharing feelings about being newly dead."
+            },
+            {
+                        "id": 4,
+                        "name": "Ancient Prophecy",
+                        "players": "Varies",
+                        "months": [
+                                    "February"
+                        ],
+                        "objective": "An audience member retells a story while another person draws the events in pictograms. The players get 20 seconds to review the images, then retell the story to the best of their ability."
+            },
+            {
+                        "id": 5,
+                        "name": "Back to Back Dubbing",
+                        "players": 4,
+                        "months": [
+                                    "August",
+                                    "March"
+                        ],
+                        "objective": "Players are given an activity and tell a story. Two players act out the story silently while two other players speak without seeing what actions are being taken."
+            },
+            {
+                        "id": 6,
+                        "name": "Back to Back Switch/Change",
+                        "players": 4,
+                        "months": [
+                                    "May"
+                        ],
+                        "objective": "Given an activity that makes you want to move, two players face back and act as voices for the two players acting in front. When the bell rings, the host may switch the physical actors, switch the voice actors, or change them out completely."
+            },
+            {
+                        "id": 7,
+                        "name": "Ballet",
+                        "players": 4,
+                        "months": [
+                                    "November",
+                                    "May"
+                        ],
+                        "objective": "Audience members provide three suggestions: job, location, and object. Players use dancing to help the other players guess each suggestion, with a spin and bell ding as each one is guessed."
+            },
+            {
+                        "id": 8,
+                        "name": "Blues Jam",
+                        "players": 4,
+                        "months": [
+                                    "November",
+                                    "May"
+                        ],
+                        "objective": "Four players, three blocks. The prompt is an annoyance. Each player gets a chance to sing a blues verse about their annoyance while the other players on their blocks act as the backup band."
+            },
+            {
+                        "id": 9,
+                        "name": "Boris",
+                        "players": 2,
+                        "months": [
+                                    "March"
+                        ],
+                        "objective": "Two players. The prompt is the theme of the torture. Boris is an invisible bad cop. One player is a criminal and the other is the good cop, who repeatedly leaves and calls on Boris to torture the truth out of the criminal."
+            },
+            {
+                        "id": 10,
+                        "name": "Campfire Stories",
+                        "players": "All",
+                        "months": [
+                                    "October"
+                        ],
+                        "objective": "All players take turns telling a spooky story. The prompt is the title of the story."
+            },
+            {
+                        "id": 11,
+                        "name": "Change",
+                        "players": 2,
+                        "months": [
+                                    "September"
+                        ],
+                        "objective": "Two players perform a scene based on an activity. The host dings and yells “change” to prompt a change in the action."
+            },
+            {
+                        "id": 12,
+                        "name": "CSI Punsylvania",
+                        "players": "All",
+                        "months": [
+                                    "March"
+                        ],
+                        "objective": "A backline game of puns about how someone was murdered."
+            },
+            {
+                        "id": 13,
+                        "name": "Death Trigger/Kill Word",
+                        "players": 4,
+                        "months": [
+                                    "February"
+                        ],
+                        "objective": "Players are given words from the audience based on a location suggestion. If a player says a kill word, that player selects someone to kill. If a player says a death word, that player dies immediately."
+            },
+            {
+                        "id": 14,
+                        "name": "Evil Twin",
+                        "players": 4,
+                        "months": [
+                                    "September"
+                        ],
+                        "objective": "Two people play a scene with two evil twins on the side. The evil twins tap out their counterparts to do something evil. The non-evil twins then have to justify the behavior. Prompt is an activity."
+            },
+            {
+                        "id": 15,
+                        "name": "Fork in the Road",
+                        "players": 6,
+                        "months": [
+                                    "October",
+                                    "February"
+                        ],
+                        "objective": "Two players start a scene based on an activity and establish big characters. The host stops the scene at a pivotal moment. Each next pair starts from the same point, repeats the exact last line, and embodies the established characters. The audience votes for their favorite scene, and that pair finishes it."
+            },
+            {
+                        "id": 16,
+                        "name": "Four Square",
+                        "players": 4,
+                        "months": [
+                                    "November",
+                                    "January"
+                        ],
+                        "objective": "Four players perform mini scenes while rotating through a square. Each player has a prompt: thing, occupation, emotion, or location."
+            },
+            {
+                        "id": 17,
+                        "name": "Goon River",
+                        "players": 3,
+                        "months": [
+                                    "All"
+                        ],
+                        "objective": "Three players perform monologues one at a time in line fashion. Each gives a different perspective on a joint narrative that took place in a location provided by the audience."
+            },
+            {
+                        "id": 18,
+                        "name": "Hey Baby",
+                        "players": "All",
+                        "months": [
+                                    "January",
+                                    "February"
+                        ],
+                        "objective": "A backline game of sexy jokes based on various noun prompts."
+            },
+            {
+                        "id": 19,
+                        "name": "Hey Santa, All I Want for Christmas Is a ______ Because…",
+                        "players": "All",
+                        "months": [
+                                    "November"
+                        ],
+                        "objective": "A backline game based on noun prompts about Christmas wishes."
+            },
+            {
+                        "id": 20,
+                        "name": "Hey Waiter, There’s a _____ in My Rice",
+                        "players": "All",
+                        "months": [
+                                    "February"
+                        ],
+                        "objective": "A backline game based on noun prompts where an audience member has found something unexpected in their rice."
+            },
+            {
+                        "id": 21,
+                        "name": "Hijacker",
+                        "players": 4,
+                        "months": [
+                                    "March"
+                        ],
+                        "objective": "Three players stay while one leaves the room. The audience provides an object used to hijack the group, a mode of transportation, and the location the trio is headed. This is a snapper and clapper guessing game."
+            },
+            {
+                        "id": 22,
+                        "name": "Hydra PHD",
+                        "players": "All",
+                        "months": [
+                                    "February"
+                        ],
+                        "objective": "A hydra with multiple heads expertly answers questions about a given topic one word at a time."
+            },
+            {
+                        "id": 23,
+                        "name": "Jeopardy",
+                        "players": "3+ plus host",
+                        "months": [
+                                    "March"
+                        ],
+                        "objective": "Played like Jeopardy with questionable answers. Contestants introduce themselves. For each round, get a category and an answer, and each person responds in the form of a question. Three rounds plus Final Jeopardy with wagers."
+            },
+            {
+                        "id": 24,
+                        "name": "Just a Cause",
+                        "players": "All",
+                        "months": [
+                                    "All"
+                        ],
+                        "objective": "A song game about a given cause, performed in a “We Are the World” style."
+            },
+            {
+                        "id": 25,
+                        "name": "LCD",
+                        "players": 4,
+                        "months": [
+                                    "All"
+                        ],
+                        "objective": "Three players step out while one gets a location, career, and object of death. That player pantomimes it to the next player, who pantomimes to the next, creating a gibberish telephone game to see if they can get all three elements right."
+            },
+            {
+                        "id": 26,
+                        "name": "Little Voice",
+                        "players": 2,
+                        "months": [
+                                    "November",
+                                    "May"
+                        ],
+                        "objective": "Two players. The prompt is a location. The little voice is an object trying to persuade the other player to help them achieve a goal."
+            },
+            {
+                        "id": 27,
+                        "name": "LOTUS",
+                        "players": 6,
+                        "months": [
+                                    "September"
+                        ],
+                        "objective": "Six players form three pairs. The first pair gets a relationship and starts the story. The second and third pairs are the same characters at future points. Each pair continues the story in turn until all three pairs have done three scenes, wrapping it up in the ninth scene."
+            },
+            {
+                        "id": 28,
+                        "name": "Movie Critic (Holiday Special Review)",
+                        "players": 4,
+                        "months": [
+                                    "November"
+                        ],
+                        "objective": "A movie review-style game where hosts explain or review a holiday film chosen by the audience while two players act out different parts of it."
+            },
+            {
+                        "id": 29,
+                        "name": "Musical Review",
+                        "players": 4,
+                        "months": [
+                                    "All"
+                        ],
+                        "objective": "Two hosts are part of a review show where they explain a musical chosen by the audience. Two players act out different small parts, usually in three total sections."
+            },
+            {
+                        "id": 30,
+                        "name": "My Nickname Was…",
+                        "players": "All",
+                        "months": [
+                                    "All"
+                        ],
+                        "objective": "Players explain why their nickname back in the day, at school, or in any setting was based on the inserted noun prompt."
+            },
+            {
+                        "id": 31,
+                        "name": "Objects in a Box",
+                        "players": 3,
+                        "months": [
+                                    "All"
+                        ],
+                        "objective": "Objects are chosen by an audience member and placed in three closed boxes. Without knowing the objects, each player gives a setup monologue, eventually opens the box, incorporates the object, justifies it, and continues through beginning, middle, and end monologues."
+            },
+            {
+                        "id": 32,
+                        "name": "Other Worldly Advocate",
+                        "players": 3,
+                        "months": [
+                                    "All"
+                        ],
+                        "objective": "One player is the straight man while two angel/devil players give advice. The straight man makes decisions based on the location or activity, and the angel/devil give good or evil advice that affects those decisions."
+            },
+            {
+                        "id": 33,
+                        "name": "Party Quirks",
+                        "players": 4,
+                        "months": [
+                                    "All"
+                        ],
+                        "objective": "One player hosts a party attended by three others. The audience gives quirks or characters for the attendees to embody. The guests give hints, and the host tries to guess all quirks before the story wraps up."
+            },
+            {
+                        "id": 34,
+                        "name": "Rashomon",
+                        "players": 3,
+                        "months": [
+                                    "September"
+                        ],
+                        "objective": "Three players perform a scene based on a location with clear personalities. The host dings, and the scene is replayed from each character’s point of view. The POV character treats themselves as normal while the others heighten their quirks."
+            },
+            {
+                        "id": 35,
+                        "name": "Realtor",
+                        "players": 3,
+                        "months": [
+                                    "August"
+                        ],
+                        "objective": "A realtor gives a tour to two people. The theme of the house is the prompt. Scene one is the tour, and scene two is the couple existing in the space as the host introduced it."
+            },
+            {
+                        "id": 36,
+                        "name": "Ride Share",
+                        "players": "All",
+                        "months": [
+                                    "August",
+                                    "October",
+                                    "January"
+                        ],
+                        "objective": "Four chairs are placed like a car. One player is the driver for the whole game. One by one, each actor enters as a passenger and does a short scene with the driver based on their destination, then exits before the next passenger arrives."
+            },
+            {
+                        "id": 37,
+                        "name": "Rumors",
+                        "players": "All",
+                        "months": [
+                                    "March"
+                        ],
+                        "objective": "All-player game. A prompt is given, usually a text or weird thing someone heard. Each player passes along a rumor that changes slightly until the original player returns and hears the final distorted rumor."
+            },
+            {
+                        "id": 38,
+                        "name": "Scenes from a Hat",
+                        "players": "All",
+                        "months": [
+                                    "August",
+                                    "November",
+                                    "January",
+                                    "February"
+                        ],
+                        "objective": "All-game format. A prompt is given and players act out scenes based on that prompt."
+            },
+            {
+                        "id": 39,
+                        "name": "Seed Word",
+                        "players": 6,
+                        "months": [
+                                    "January"
+                        ],
+                        "objective": "Six players split into three teams of two. Based on an audience word, each team performs a small four-line scene. The audience eliminates their least favorite team each round until one winning team finishes their scene."
+            },
+            {
+                        "id": 40,
+                        "name": "Serenade",
+                        "players": "All",
+                        "months": [
+                                    "May"
+                        ],
+                        "objective": "An adult volunteer is interviewed by the host about their name, job, hobbies, and interesting details. A track plays and the players sing R&B-style pick-up lines to them based on the interview."
+            },
+            {
+                        "id": 41,
+                        "name": "Slideshow",
+                        "players": "All",
+                        "months": [
+                                    "January"
+                        ],
+                        "objective": "Based on an audience-given location, one player gives a monologue describing a trip. Behind them, the rest pose as slideshow images. When the speaker says “Click,” the poses change and the speaker continues, whether or not the poses match."
+            },
+            {
+                        "id": 42,
+                        "name": "Soap Opera",
+                        "players": 4,
+                        "months": [
+                                    "August"
+                        ],
+                        "objective": "A multi-part game with four players. They establish a scene based on a location, then continue it with an audience-given twist, then continue again with a death, then finally conclude the scene."
+            },
+            {
+                        "id": 43,
+                        "name": "Sounds Like a Song",
+                        "players": 4,
+                        "months": [
+                                    "May"
+                        ],
+                        "objective": "Four players act out a scene based on an activity. If the host hears a line they like, they stop the scene and say “That Sounds Like a Song!” The player or players then sing based on that line. Variations include duet, trio, or ensemble song."
+            },
+            {
+                        "id": 44,
+                        "name": "Sounds Like a Song Survivor",
+                        "players": 4,
+                        "months": [
+                                    "May"
+                        ],
+                        "objective": "A mash-up of Sounds Like a Song and Survivor. Four players do a scene, the host can pause for songs, then one player sits out and the remaining players replay the scene filling in missing parts. Repeat until one person performs all parts."
+            },
+            {
+                        "id": 45,
+                        "name": "Survivor",
+                        "players": 4,
+                        "months": [
+                                    "August",
+                                    "November"
+                        ],
+                        "objective": "Four players act out a scene based on an activity. After the scene ends, one player sits and the remaining players replay the scene while covering all four parts. This repeats until one person performs every part."
+            },
+            {
+                        "id": 46,
+                        "name": "Top That",
+                        "players": 2,
+                        "months": [
+                                    "August",
+                                    "February"
+                        ],
+                        "objective": "Two players at a time. One pantomimes an action and says “I’m doing X, top that.” The other uses the same motion to justify a new activity. Players go back and forth until someone takes too long, repeats, or gets too similar, then the next challenger enters."
+            },
+            {
+                        "id": 47,
+                        "name": "Understudy",
+                        "players": "4+",
+                        "months": [
+                                    "January"
+                        ],
+                        "objective": "Four or more players start a scene based on a location. The host can ding and substitute actors from the wings, switch actors on stage, add or remove actors, or otherwise change the cast while the scene continues."
+            },
+            {
+                        "id": 48,
+                        "name": "Voices from Heaven",
+                        "players": 4,
+                        "months": [
+                                    "October"
+                        ],
+                        "objective": "Four players speak in turn, starting with brief introductions, then sharing more detail, then wrapping up the story. The story is about the day all players died, ideally without knowing each other, with their deaths becoming intermingled because of the location."
+            },
+            {
+                        "id": 49,
+                        "name": "What’s the Matter with Stephen?",
+                        "players": 3,
+                        "months": [
+                                    "August",
+                                    "November",
+                                    "February",
+                                    "March"
+                        ],
+                        "objective": "Three players. Two are sent out while the audience gives Stephen’s problem and what will make Stephen feel better. Stephen speaks only in gibberish. The audience snaps when actors get close and claps when they guess correctly."
+            },
+            {
+                        "id": 50,
+                        "name": "Where Are These Chairs",
+                        "players": "All",
+                        "months": [
+                                    "January"
+                        ],
+                        "objective": "Two chairs are set center stage. Two actors ask, “Where are these chairs?” The host gives a location, they do a short scene, one actor leaves, another joins, and the pattern continues until everyone rotates through and the first actor ends the final scene."
+            },
+            {
+                        "id": 51,
+                        "name": "Wikipedia",
+                        "players": "All",
+                        "months": [
+                                    "January"
+                        ],
+                        "objective": "All-player lineup game. The host gets a subject to search Wikipedia for. Actors step forward to give made-up or real facts. Others can yell “edit” to take over, and the host may accept/reject edits, call hyperlink, video, list, close tab, or open a new tab."
+            },
+            {
+                        "id": 52,
+                        "name": "Work Excuse",
+                        "players": 3,
+                        "months": [
+                                    "March"
+                        ],
+                        "objective": "Three players. One leaves while the audience gives the reason they are late for work. The boss questions them while the coworker pantomimes the excuse behind the boss’s back. The audience snaps/claps as the late employee gets close or guesses."
+            },
+            {
+                        "id": 53,
+                        "name": "Yo Mama",
+                        "players": "All",
+                        "months": [
+                                    "January",
+                                    "February"
+                        ],
+                        "objective": "All-player lineup game. The host says a noun and actors step forward with a one-liner insult using “yo mama is a...” or “your mama is like a...” The host can ding and move to the next word after a great joke, bad joke, or missed rule."
+            },
+            {
+                        "id": 54,
+                        "name": "You Dirty Rat",
+                        "players": "All",
+                        "months": [
+                                    "January"
+                        ],
+                        "objective": "All-player lineup game. The host gives nouns and actors step forward saying, “You dirty rat, they call me the _____ because _____,” explaining the nickname in a hitman-style way."
+            }
+];
+        function App() {
+            const games = defaultGames;
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [searchTerm, setSearchTerm] = useState("");
+            const [filterPlayers, setFilterPlayers] = useState("");
+            const [viewMode, setViewMode] = useState("card");
+
+            const normalize = (value) => value.toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/['’]/g, '').replace(/[^a-z0-9+\s]/g, ' ').replace(/\s+/g, ' ').trim();
+            const getSearchText = (game) => normalize([game.name, game.players, `${game.players} players`, ...game.months, game.objective].join(' '));
+            const getInitials = (text) => normalize(text).split(' ').filter(Boolean).map(word => word[0]).join('');
+            const wordStartsWith = (text, term) => normalize(text).split(' ').some(word => word.startsWith(term));
+            const matchesPlayerFilter = (game, filter) => {
+                if (!filter) return true;
+                const players = normalize(game.players);
+                const filterValue = normalize(filter);
+                if (filterValue === 'all players') return players === 'all';
+                if (filterValue === 'varies') return players === 'varies';
+                if (filterValue === '3+') return players.startsWith('3+');
+                if (filterValue === '4+') return players.startsWith('4+');
+                return players === filterValue;
+            };
+            const fuzzyScore = (game, rawQuery) => {
+                const query = normalize(rawQuery);
+                if (!query) return 1;
+                const name = normalize(game.name);
+                const objective = normalize(game.objective);
+                const months = normalize(game.months.join(' '));
+                const players = normalize(`${game.players} ${game.players} players`);
+                const haystack = getSearchText(game);
+                const initials = getInitials(game.name);
+                const terms = query.split(' ').filter(Boolean);
+                let score = 0;
+                if (name.startsWith(query)) score += 100;
+                if (query.length >= 2 && initials.startsWith(query.replace(/\s/g, ''))) score += 80;
+                if (wordStartsWith(name, query)) score += 60;
+                for (const term of terms) {
+                    if (name.startsWith(term)) score += 35;
+                    else if (wordStartsWith(name, term)) score += 30;
+                    else if (wordStartsWith(months, term)) score += 18;
+                    else if (wordStartsWith(players, term)) score += 18;
+                    else if (term.length >= 3 && wordStartsWith(objective, term)) score += 8;
+                    else if (term.length >= 4 && haystack.includes(term)) score += 3;
+                    else return 0;
+                }
+                return score;
+            };
+            const filteredGames = useMemo(() => games
+                .map(game => ({ game, score: fuzzyScore(game, searchTerm) }))
+                .filter(({ game, score }) => score > 0 && matchesPlayerFilter(game, filterPlayers))
+                .sort((a, b) => b.score - a.score || a.game.name.localeCompare(b.game.name))
+                .map(({ game }) => game), [games, searchTerm, filterPlayers]);
+            const currentGame = filteredGames[currentIndex];
+            const showCard = (index) => { setCurrentIndex(index); setViewMode('card'); };
+            const nextCard = () => filteredGames.length > 0 && setCurrentIndex((prev) => (prev + 1) % filteredGames.length);
+            const prevCard = () => filteredGames.length > 0 && setCurrentIndex((prev) => (prev - 1 + filteredGames.length) % filteredGames.length);
+            const playerFilters = ["2", "3", "4", "5", "6", "3+", "4+", "Varies", "All players"];
+
+            return (
+                <div className="container">
+                    <h1>ROULETTE 2026</h1>
+                    <p className="subtitle">Improv Game Reference</p>
+                    <input type="text" placeholder="Search by first letters, game, month, players, or description..." className="search-box" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentIndex(0); }} />
+                    <div className="tabs">
+                        <button className={`tab-btn ${viewMode === 'card' ? 'active' : ''}`} onClick={() => setViewMode('card')}>Card View</button>
+                        <button className={`tab-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}>List View</button>
+                    </div>
+                    <div className="filters">
+                        <button className={`filter-btn ${filterPlayers === '' ? 'active' : ''}`} onClick={() => { setFilterPlayers(''); setCurrentIndex(0); }}>All</button>
+                        {playerFilters.map(p => (
+                            <button key={p} className={`filter-btn ${filterPlayers === p ? 'active' : ''}`} onClick={() => { setFilterPlayers(p); setCurrentIndex(0); }}>{p}</button>
+                        ))}
+                    </div>
+                    <div className="results-count">Showing {filteredGames.length} of {games.length} games</div>
+                    {filteredGames.length === 0 && (
+                        <div className="card"><div><h2 className="card-title">No matches found</h2><div className="card-objective">Try a game name, player count, month, or keyword from the description.</div></div></div>
+                    )}
+                    {viewMode === 'card' && filteredGames.length > 0 && currentGame && (
+                        <>
+                            <div className="card">
+                                <div>
+                                    <h2 className="card-title">{currentGame.name}</h2>
+                                    <div className="card-content">
+                                        <div className="card-meta"><span>👥 Players:</span><span>{currentGame.players}</span></div>
+                                        <div className="card-meta"><span>📅</span><div className="months-list">{currentGame.months.map(m => <span key={m} className="month-tag">{m}</span>)}</div></div>
+                                    </div>
+                                    <div className="card-objective">{currentGame.objective}</div>
+                                </div>
+                                <div className="card-number">Card {currentIndex + 1} of {filteredGames.length}</div>
+                            </div>
+                            <div className="nav-buttons">
+                                <button className="nav-btn" onClick={prevCard} disabled={filteredGames.length === 1}>◀</button>
+                                <span className="nav-counter">{currentIndex + 1} / {filteredGames.length}</span>
+                                <button className="nav-btn" onClick={nextCard} disabled={filteredGames.length === 1}>▶</button>
+                            </div>
+                        </>
+                    )}
+                    {viewMode === 'list' && filteredGames.length > 0 && (
+                        <div className="games-grid">
+                            {filteredGames.map((game, index) => (
+                                <button key={game.id} className="game-card" onClick={() => showCard(index)}>
+                                    <div className="game-card-title">{game.name}</div>
+                                    <div className="game-card-meta">{game.players} players • {game.months.join(', ')}</div>
+                                    <div className="game-card-obj">{game.objective}</div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
