@@ -45,7 +45,7 @@
     <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
 
     <script>
-const { useState, useMemo, useEffect } = React;
+const { useState, useMemo } = React;
 const e = React.createElement;
 
 function App({ initialGames }) {
@@ -143,6 +143,48 @@ function App({ initialGames }) {
     filteredGames.length > 0 && setCurrentIndex((prev) => (prev - 1 + filteredGames.length) % filteredGames.length);
   const playerFilters = ["2", "3", "4", "5", "6", "3+", "4+", "Varies", "All players"];
 
+  // Build filter buttons array
+  const filterButtons = [
+    e("button", {
+      className: "filter-btn" + (filterPlayers === "" ? " active" : ""),
+      onClick: () => {
+        setFilterPlayers("");
+        setCurrentIndex(0);
+      }
+    }, "All")
+  ].concat(
+    playerFilters.map((p) =>
+      e("button", {
+        key: p,
+        className: "filter-btn" + (filterPlayers === p ? " active" : ""),
+        onClick: () => {
+          setFilterPlayers(p);
+          setCurrentIndex(0);
+        }
+      }, p)
+    )
+  );
+
+  // Build month tags
+  const monthTags = (currentGame && currentGame.months) ? currentGame.months.map(m => 
+    e("span", { key: m, className: "month-tag" }, m)
+  ) : [];
+
+  // Build game cards
+  const gameCards = filteredGames.map((game, index) =>
+    e("button", {
+      key: game.id,
+      className: "game-card",
+      onClick: () => showCard(index)
+    },
+      e("div", { className: "game-card-title" }, game.name),
+      e("div", { className: "game-card-meta" }, 
+        game.players + " players • " + (game.months || []).join(", ")
+      ),
+      e("div", { className: "game-card-obj" }, game.objective)
+    )
+  );
+
   return e("div", { className: "container" },
     e("h1", null, "ROULETTE 2026"),
     e("p", { className: "subtitle" }, "Improv Game Reference"),
@@ -169,25 +211,7 @@ function App({ initialGames }) {
       }, "List View")
     ),
 
-    e("div", { className: "filters" },
-      e("button", {
-        className: "filter-btn" + (filterPlayers === "" ? " active" : ""),
-        onClick: () => {
-          setFilterPlayers("");
-          setCurrentIndex(0);
-        }
-      }, "All"),
-      ...playerFilters.map((p) =>
-        e("button", {
-          key: p,
-          className: "filter-btn" + (filterPlayers === p ? " active" : ""),
-          onClick: () => {
-            setFilterPlayers(p);
-            setCurrentIndex(0);
-          }
-        }, p)
-      )
-    ),
+    e("div", { className: "filters" }, filterButtons),
 
     e("div", { className: "results-count" }, 
       "Showing " + filteredGames.length + " of " + games.length + " games"
@@ -211,11 +235,7 @@ function App({ initialGames }) {
             ),
             e("div", { className: "card-meta" },
               e("span", null, "📅"),
-              e("div", { className: "months-list" },
-                ...(currentGame.months || []).map(m => 
-                  e("span", { key: m, className: "month-tag" }, m)
-                )
-              )
+              e("div", { className: "months-list" }, monthTags)
             )
           ),
           e("div", { className: "card-objective" }, currentGame.objective)
@@ -242,21 +262,7 @@ function App({ initialGames }) {
       )
     ) : null,
 
-    viewMode === "list" && filteredGames.length > 0 ? e("div", { className: "games-grid" },
-      ...filteredGames.map((game, index) =>
-        e("button", {
-          key: game.id,
-          className: "game-card",
-          onClick: () => showCard(index)
-        },
-          e("div", { className: "game-card-title" }, game.name),
-          e("div", { className: "game-card-meta" }, 
-            game.players + " players • " + (game.months || []).join(", ")
-          ),
-          e("div", { className: "game-card-obj" }, game.objective)
-        )
-      )
-    ) : null
+    viewMode === "list" && filteredGames.length > 0 ? e("div", { className: "games-grid" }, gameCards) : null
   );
 }
 
