@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Roulette 2026">
+    <title>Roulette 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 10%, #0f3460 100%); }
+        body { overflow: hidden; }
+        #root { width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; font-weight: bold; }
+        .subtitle { color: #f87171; font-size: 1.125rem; margin-bottom: 1rem; }
+        .search-box { width: 100%; padding: 0.75rem 1rem; background: #1f2937; color: white; border: 2px solid #7f1d1d; border-radius: 0.5rem; font-size: 1rem; margin-bottom: 1rem; }
+        .tabs, .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+        .tab-btn, .filter-btn { padding: 0.65rem 1rem; border: none; border-radius: 0.5rem; background: #1f2937; color: white; cursor: pointer; font-weight: 700; font-size: 0.95rem; }
+        .tab-btn.active, .filter-btn.active { background: #DC2626; }
+        .results-count { color: #d1d5db; margin-bottom: 1rem; font-size: 0.95rem; }
+        .card { background: linear-gradient(to bottom right, #111827, #1f2937); border: 2px solid #DC2626; border-radius: 0.5rem; padding: 2rem; margin-bottom: 2rem; min-height: 24rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-title { font-size: 2rem; font-weight: bold; color: #f87171; margin-bottom: 1.5rem; }
+        .card-content { margin-bottom: 1.5rem; }
+        .card-meta { margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .months-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+        .month-tag { background: rgba(159, 18, 18, 0.5); color: #fecaca; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; }
+        .card-objective { border-top: 1px solid #374151; padding-top: 1.5rem; color: #d1d5db; font-size: 1.125rem; line-height: 1.625; }
+        .card-number { text-align: right; color: #6b7280; font-size: 0.875rem; margin-top: 2rem; }
+        .nav-buttons { display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+        .nav-btn { padding: 0.75rem; background: #DC2626; color: white; border: none; border-radius: 9999px; cursor: pointer; }
+        .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .nav-counter { color: #d1d5db; font-weight: 300; }
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+        .game-card { background: #1f2937; border: 2px solid #4b5563; border-radius: 0.5rem; padding: 1rem; text-align: left; color: white; cursor: pointer; }
+        .game-card-title { font-size: 1.125rem; font-weight: bold; color: #f87171; margin-bottom: 0.5rem; }
+        .game-card-meta { font-size: 0.875rem; color: #9ca3af; margin-bottom: 0.75rem; }
+        .game-card-obj { font-size: 0.875rem; color: #d1d5db; line-height: 1.45; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <script>
+const { useState, useMemo, useEffect } = React;
+const e = React.createElement;
+
+function App({ initialGames }) {
+  const games = initialGames || [];
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterPlayers, setFilterPlayers] = useState("");
+  const [viewMode, setViewMode] = useState("card");
+
+  const normalize = (value) =>
+    value
+      .toString()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/['']/g, "")
+      .replace(/[^a-z0-9+\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const getSearchText = (game) =>
+    normalize([
+      game.name,
+      game.players,
+      game.players + " players",
+      ...(game.months || []),
+      game.objective,
+    ].join(" "));
+
+  const getInitials = (text) =>
+    normalize(text)
+      .split(" ")
+      .filter(Boolean)
+      .map((word) => word[0])
+      .join("");
+
+  const wordStartsWith = (text, term) => 
+    normalize(text).split(" ").some((word) => word.startsWith(term));
+
+  const matchesPlayerFilter = (game, filter) => {
+    if (!filter) return true;
+    const players = normalize(game.players);
+    const filterValue = normalize(filter);
+    if (filterValue === "all players") return players === "all";
+    if (filterValue === "varies") return players === "varies";
+    if (filterValue === "3+") return players.startsWith("3+");
+    if (filterValue === "4+") return players.startsWith("4+");
+    return players === filterValue;
+  };
+
+  const fuzzyScore = (game, rawQuery) => {
+    const query = normalize(rawQuery);
+    if (!query) return 1;
+    const name = normalize(game.name);
+    const objective = normalize(game.objective || "");
+    const months = normalize((game.months || []).join(" "));
+    const players = normalize(game.players + " " + game.players + " players");
+    const haystack = getSearchText(game);
+    const initials = getInitials(game.name);
+    const terms = query.split(" ").filter(Boolean);
+    let score = 0;
+    if (name.startsWith(query)) score += 100;
+    if (query.length >= 2 && initials.startsWith(query.replace(/\s/g, ""))) score += 80;
+    if (wordStartsWith(name, query)) score += 60;
+    for (const term of terms) {
+      if (name.startsWith(term)) score += 35;
+      else if (wordStartsWith(name, term)) score += 30;
+      else if (wordStartsWith(months, term)) score += 18;
+      else if (wordStartsWith(players, term)) score += 18;
+      else if (term.length >= 3 && wordStartsWith(objective, term)) score += 8;
+      else if (term.length >= 4 && haystack.includes(term)) score += 3;
+      else return 0;
+    }
+    return score;
+  };
+
+  const filteredGames = useMemo(
+    () =>
+      games
+        .map((game) => ({ game, score: fuzzyScore(game, searchTerm) }))
+        .filter(({ game, score }) => score > 0 && matchesPlayerFilter(game, filterPlayers))
+        .sort((a, b) => b.score - a.score || a.game.name.localeCompare(b.game.name))
+        .map(({ game }) => game),
+    [games, searchTerm, filterPlayers]
+  );
+
+  const currentGame = filteredGames[currentIndex] || null;
+  const showCard = (index) => {
+    setCurrentIndex(index);
+    setViewMode("card");
+  };
+  const nextCard = () => 
+    filteredGames.length > 0 && setCurrentIndex((prev) => (prev + 1) % filteredGames.length);
+  const prevCard = () => 
+    filteredGames.length > 0 && setCurrentIndex((prev) => (prev - 1 + filteredGames.length) % filteredGames.length);
+  const playerFilters = ["2", "3", "4", "5", "6", "3+", "4+", "Varies", "All players"];
+
+  return e("div", { className: "container" },
+    e("h1", null, "ROULETTE 2026"),
+    e("p", { className: "subtitle" }, "Improv Game Reference"),
+
+    e("input", {
+      type: "text",
+      placeholder: "Search by first letters, game, month, players, or description...",
+      className: "search-box",
+      value: searchTerm,
+      onChange: (evt) => {
+        setSearchTerm(evt.target.value);
+        setCurrentIndex(0);
+      }
+    }),
+
+    e("div", { className: "tabs" },
+      e("button", {
+        className: "tab-btn" + (viewMode === "card" ? " active" : ""),
+        onClick: () => setViewMode("card")
+      }, "Card View"),
+      e("button", {
+        className: "tab-btn" + (viewMode === "list" ? " active" : ""),
+        onClick: () => setViewMode("list")
+      }, "List View")
+    ),
+
+    e("div", { className: "filters" },
+      e("button", {
+        className: "filter-btn" + (filterPlayers === "" ? " active" : ""),
+        onClick: () => {
+          setFilterPlayers("");
+          setCurrentIndex(0);
+        }
+      }, "All"),
+      ...playerFilters.map((p) =>
+        e("button", {
+          key: p,
+          className: "filter-btn" + (filterPlayers === p ? " active" : ""),
+          onClick: () => {
+            setFilterPlayers(p);
+            setCurrentIndex(0);
+          }
+        }, p)
+      )
+    ),
+
+    e("div", { className: "results-count" }, 
+      "Showing " + filteredGames.length + " of " + games.length + " games"
+    ),
+
+    filteredGames.length === 0 ? e("div", { className: "card" },
+      e("div", null,
+        e("h2", { className: "card-title" }, "No matches found"),
+        e("div", { className: "card-objective" }, "Try a game name, player count, month, or keyword from the description.")
+      )
+    ) : null,
+
+    viewMode === "card" && filteredGames.length > 0 && currentGame ? e("div", null,
+      e("div", { className: "card" },
+        e("div", null,
+          e("h2", { className: "card-title" }, currentGame.name),
+          e("div", { className: "card-content" },
+            e("div", { className: "card-meta" },
+              e("span", null, "👥 Players:"),
+              e("span", null, currentGame.players)
+            ),
+            e("div", { className: "card-meta" },
+              e("span", null, "📅"),
+              e("div", { className: "months-list" },
+                ...(currentGame.months || []).map(m => 
+                  e("span", { key: m, className: "month-tag" }, m)
+                )
+              )
+            )
+          ),
+          e("div", { className: "card-objective" }, currentGame.objective)
+        ),
+        e("div", { className: "card-number" }, 
+          "Card " + (currentIndex + 1) + " of " + filteredGames.length
+        )
+      ),
+
+      e("div", { className: "nav-buttons" },
+        e("button", {
+          className: "nav-btn",
+          onClick: prevCard,
+          disabled: filteredGames.length === 1
+        }, "◀"),
+        e("span", { className: "nav-counter" }, 
+          (currentIndex + 1) + " / " + filteredGames.length
+        ),
+        e("button", {
+          className: "nav-btn",
+          onClick: nextCard,
+          disabled: filteredGames.length === 1
+        }, "▶")
+      )
+    ) : null,
+
+    viewMode === "list" && filteredGames.length > 0 ? e("div", { className: "games-grid" },
+      ...filteredGames.map((game, index) =>
+        e("button", {
+          key: game.id,
+          className: "game-card",
+          onClick: () => showCard(index)
+        },
+          e("div", { className: "game-card-title" }, game.name),
+          e("div", { className: "game-card-meta" }, 
+            game.players + " players • " + (game.months || []).join(", ")
+          ),
+          e("div", { className: "game-card-obj" }, game.objective)
+        )
+      )
+    ) : null
+  );
+}
+
+async function init() {
+  try {
+    const res = await fetch('/improv_game_list/games.json', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('games.json fetch failed: ' + res.status);
+    const games = await res.json();
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      React.createElement(App, { initialGames: games })
+    );
+  } catch (err) {
+    console.error('Failed to load games.json', err);
+    const root = document.getElementById('root');
+    if (root) {
+      root.innerHTML = '<div style="padding:1rem;color:#f87171">Failed to load data. Check console for details.</div>';
+    }
+  }
+}
+
+init();
+    </script>
+</body>
+</html>
